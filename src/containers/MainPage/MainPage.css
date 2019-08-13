@@ -1,0 +1,83 @@
+.main-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: aquamarine;
+}
+
+.login__wrapper_form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: azure;
+  border: solid 2px rgba(0, 26, 255, 0.767);
+  border-radius: 0.5rem;
+  padding: 10px 40px;
+}
+
+.chat__wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: aliceblue;
+  width: 80%;
+  height: 80%;
+  max-width: 800px;
+  border: solid 2px rgba(0, 26, 255, 0.767);
+  border-radius: 10px;
+}
+
+.chat__wrapper_text {
+  margin-top: 10px;
+  width: 97%;
+  min-height: 85%;
+  background-color: rgb(251, 255, 255);
+  border-radius: 0.5rem;
+  border: solid 1px #ced4da;
+}
+
+.button,
+.input {
+  margin: 10px 0;
+}
+
+.form-control {
+  width: 100%;
+}
+
+.form__send-message {
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.form-inline {
+  justify-content: center;
+}
+
+.form__wrapper {
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .chat__wrapper {
+    width: 80%;
+    height: 90%;
+  }
+  .chat__wrapper_text {
+    min-height: 80%;
+  }
+}
+
+.form-control {
+  width: 100% !important;
+}
+
+.form__button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
