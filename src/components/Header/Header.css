@@ -1,0 +1,18 @@
+.header-wrapper {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.header-login {
+  /* background-color: #007bff; */
+  /* color: #fff; */
+  padding: 6px 12px;
+  border: solid 1px #007bff;
+  border-radius: 0.25rem;
+}
+
+.button {
+  margin: 10px 0;
+}

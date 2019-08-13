@@ -1,17 +1,56 @@
 import React, { Component } from 'react';
-import { Button, Col, Input, Form } from 'reactstrap';
-
+import {
+ Button, Col, Input, Form 
+} from 'reactstrap';
+// import PropTypes from 'prop-types';
+import Header from '../../components/Header/Header';
 import './MainPage.css';
 
 export default class MainPage extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      authorized: false
+    if (localStorage.getItem('state')) {
+      this.state = JSON.parse(localStorage.getItem('state'));
+    } else {
+      this.state = {
+        authorized: false,
+        name: '',
+      };
+    }
+    this.authorize = this.authorize.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  authorize(e) {
+    const login = e.target.querySelector('input[type="login"]').value;
+    this.setState({
+      name: login,
+      authorized: true,
+    });
+    const tempObj = {
+      name: login,
+      authorized: true,
     };
+    localStorage.setItem('state', JSON.stringify(tempObj));
+  }
+
+  handleClick() {
+    this.setState({
+      name: '',
+      authorized: false,
+    });
+    const tempObj = {
+      name: '',
+      authorized: false,
+    };
+    localStorage.setItem('state', JSON.stringify(tempObj));
   }
 
   render() {
+    const header = (
+      <Header onClick={this.handleClick} login={this.state.name} />
+    );
+
     const login = (
       <form
         action="#"
@@ -19,11 +58,12 @@ export default class MainPage extends Component {
         onSubmit={this.authorize}
       >
         <Input className="input" type="login" placeholder="login" />
-        <Button color="primary" className="button">
+        <Button color="primary" type="submit" className="button">
           Login
         </Button>{' '}
       </form>
     );
+
     const chat = (
       <div className="chat__wrapper">
         <div className="chat__wrapper_text">
@@ -51,11 +91,20 @@ export default class MainPage extends Component {
         </div>
       </div>
     );
+
     return (
-      <div className="main-wrapper">{this.state.authorized ? chat : login}</div>
+      <div className="wrapper">
+        {this.state.authorized ? header : null}
+        <div className="main-wrapper">
+          {this.state.authorized ? chat : login}
+        </div>
+      </div>
     );
   }
 }
 
+// MainPage.propTypes = {
+//   name: PropTypes.string.isRequired,
+// };
 // const mapStateToProps = state => ({ lang: state.locales.lang });
 // export default connect(mapStateToProps)(MainPage);
