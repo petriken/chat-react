@@ -1,0 +1,39 @@
+.message-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+  margin: 2px 10px;
+}
+
+.message-time {
+  font-size: 0.8rem;
+  color: #ced4da;
+}
+
+.message {
+  /* color: #ffffff; */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: #ffffff;
+  background-color: #218cff;
+  border-radius: 0.25rem;
+  max-width: 80%;
+}
+
+.message-name,
+.message-text {
+  display: inline-block;
+  text-align: left;
+  padding: 0 5px;
+}
+
+.message-name {
+  word-wrap: break-word;
+}
+
+.message-text {
+  word-break: break-all;
+  max-width: 100%;
+}

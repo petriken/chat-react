@@ -23,7 +23,7 @@
   justify-content: space-around;
   align-items: center;
   background-color: azure;
-  border: solid 2px rgba(0, 26, 255, 0.767);
+  border: solid 2px #007bff;
   border-radius: 0.5rem;
   padding: 10px 40px;
 }
@@ -38,7 +38,7 @@
   height: 90%;
   margin-top: -40px;
   max-width: 800px;
-  border: solid 2px rgba(0, 26, 255, 0.767);
+  border: solid 2px #007bff;
   border-radius: 10px;
 }
 
@@ -49,6 +49,11 @@
   background-color: rgb(251, 255, 255);
   border-radius: 0.5rem;
   border: solid 1px #ced4da;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+
+  flex-direction: column-reverse;
 }
 
 .button,
