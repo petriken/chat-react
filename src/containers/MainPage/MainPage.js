@@ -11,8 +11,6 @@ import './MainPage.css';
 // import Chat from '../../components/Chat/Chat';
 
 const URL = 'wss://wssproxy.herokuapp.com/';
-// const ws = new WebSocket(URL);
-// let ws;
 
 export default class MainPage extends Component {
   constructor(props) {
@@ -38,32 +36,23 @@ export default class MainPage extends Component {
   }
 
   componentDidMount() {
-    // let ws = null;
-
-    // this.ws = this.state.ws || new WebSocket(URL);
-    // this.ws = new WebSocket(URL);
-
     this.ws.onopen = () => {
-      console.log('____________connected');
+      console.log('____________connected: ', new Date());
       console.log('open-socket.readyState', this.ws.readyState);
     };
 
     this.ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
       this.addMessage(message);
-      // console.log('-mes-socket.readyState', this.ws.readyState);
     };
 
     this.ws.onclose = () => {
-      console.log('_____________disconnected');
+      console.log('_____________disconnected: ', new Date());
       // automatically try to reconnect on connection loss
-      // ws = new WebSocket(URL);
-      this.ws = new WebSocket(URL);
-      // setTimeout(() => {
-      this.setState({
-        ws: new WebSocket(URL),
-      });
-      // }, 1000);
+      // this.ws = new WebSocket(URL);
+      // this.setState({
+      //   ws: new WebSocket(URL)
+      // });
       console.log('close-socket.readyState', this.ws.readyState);
     };
 
@@ -72,30 +61,20 @@ export default class MainPage extends Component {
     };
   }
 
-  // addMessage(mes) {
-  //   mes.reverse().forEach((item) => {
-  //     this.state.messages.push(item);
-  //   });
-  // }
-
   addMessage(mes) {
     console.log('mes', mes);
+
     mes.reverse().forEach((item) => {
-      if (mes.indexOf(item.id) === -1) {
+      if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
         this.setState({ messages: [...this.state.messages, item] });
       }
     });
   }
 
-  // addMessage = mes =>
-  //   this.setState(() => ({ messages: [mes, ...this.state.messages] }));
-
   submitMessage = (messageString) => {
     const message = { from: this.state.name, message: messageString };
     this.ws.send(JSON.stringify(message));
     console.log('message', message.message);
-
-    // this.addMessage(message);
   };
 
   authorize(e) {
@@ -108,7 +87,6 @@ export default class MainPage extends Component {
       name: login.slice(0, 30),
       authorized: true,
       message: this.state.message,
-      // messages: this.state.messages,
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
   }
