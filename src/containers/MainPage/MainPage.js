@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import {
-  Button, Col, Input, Form,
-} from 'reactstrap';
+import { Button, Col, Input, Form } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 // import PropTypes from 'prop-types';
@@ -21,6 +19,7 @@ export default class MainPage extends Component {
       name: '',
       message: '',
       messages: [],
+      offlineMessage: []
     };
     this.authorize = this.authorize.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -30,12 +29,10 @@ export default class MainPage extends Component {
   }
 
   notificationSend(message, ico, name) {
-    console.log('document.visibilityState', document.visibilityState);
-
     if ('Notification' in window && document.visibilityState !== 'visible') {
       this.notification = new Notification(message, {
         body: name,
-        icon: ico,
+        icon: ico
       });
 
       setTimeout(() => {
@@ -54,7 +51,7 @@ export default class MainPage extends Component {
       this.notificationSend('notification permissions granted');
     } else if (Notification.permission !== 'denied') {
       // В противном случае, запрашиваем разрешение
-      Notification.requestPermission((permission) => {
+      Notification.requestPermission(permission => {
         // Если пользователь разрешил, то создаем уведомление
         if (permission === 'granted') {
           this.notificationSend('notification permissions have been granted');
@@ -69,7 +66,7 @@ export default class MainPage extends Component {
       setTimeout(() => {
         this.setState({
           authorized: JSON.parse(localStorage.getItem('state')).authorized,
-          name: JSON.parse(localStorage.getItem('state')).name,
+          name: JSON.parse(localStorage.getItem('state')).name
         });
       }, 0);
     }
@@ -80,28 +77,35 @@ export default class MainPage extends Component {
     this.ws = new ReconnectingWebSocket(URL);
     this.ws.onopen = () => {
       console.log('____________connected: ', new Date());
+      this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection open',
-        'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
+        'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200'
       );
+      if (this.state.offlineMessage) {
+        this.state.offlineMessage.forEach(item => {
+          this.ws.send(JSON.stringify(item));
+        });
+        this.setState({ offlineMessage: [] });
+      }
     };
 
-    this.ws.onmessage = (e) => {
+    this.ws.onmessage = e => {
       const message = JSON.parse(e.data);
       this.addMessage(message);
     };
 
     this.ws.onclose = () => {
       console.log('_____________disconnected: ', new Date());
+      this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection closed',
-        'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
+        'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png'
       );
-      // console.log('close-socket.readyState', this.ws.readyState);
       this.setState({ readyState: this.ws.readyState });
     };
 
-    this.ws.onerror = (error) => {
+    this.ws.onerror = error => {
       console.log(`Ошибка ${error.message}`);
       // };
     };
@@ -115,36 +119,23 @@ export default class MainPage extends Component {
     }, 0);
   }
 
-  // Visibility (){window.onfocus = () => {
-  //   document.title = 'Chat';
-  //   store.dispatch(actionUserIsHere(true, 0));
-  // };
-  // window.onblur = () => {
-  //   store.dispatch(actionUserIsHere(false, count));
-  // };
-
-  // if (!user) {
-  //   document.title = ${count} unread messages;
-  // }}
-
   addMessage(mes) {
-    console.log('mes', mes);
     if (mes.length > 1) {
       this.notificationSend(
         `You have ${mes.length} new messages`,
-        'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+        'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png'
       );
     }
     mes
       .slice(0, 199)
       .reverse()
-      .forEach((item) => {
-        if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
+      .forEach(item => {
+        if (this.state.messages.findIndex(elem => elem.id === item.id) === -1) {
           if (mes.length === 1) {
             this.notificationSend(
               item.from,
               'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
-              item.message,
+              item.message
             );
           }
           this.setState({ messages: [...this.state.messages, item] });
@@ -152,21 +143,31 @@ export default class MainPage extends Component {
       });
   }
 
-  submitMessage = (messageString) => {
-    const message = { from: this.state.name, message: messageString };
-    this.ws.send(JSON.stringify(message));
-    console.log('message', message.message);
+  submitMessage = messageString => {
+    let message;
+    if (this.state.wsState === 1) {
+      message = { from: this.state.name, message: messageString };
+      this.ws.send(JSON.stringify(message));
+    } else if (this.state.wsState === 3) {
+      message = {
+        from: this.state.name,
+        message: `offline-msg: ${messageString}`
+      };
+      this.setState({
+        offlineMessage: [...this.state.offlineMessage, message]
+      });
+    }
   };
 
   authorize(e) {
     const login = e.target.querySelector('input[type="login"]').value;
     this.setState({
       name: login.slice(0, 30),
-      authorized: true,
+      authorized: true
     });
     const tempObj = {
       name: login.slice(0, 30),
-      authorized: true,
+      authorized: true
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
 
@@ -180,21 +181,15 @@ export default class MainPage extends Component {
   handleClick() {
     this.setState({
       name: '',
-      authorized: false,
+      authorized: false
     });
     const tempObj = {
       name: '',
-      authorized: false,
+      authorized: false
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
     this.ws.close();
   }
-
-  // handleSubmit(e) {
-  //   e.preventDefault();
-  //   this.submitMessage('hi');
-  //   this.setState({ message: '' });
-  // }
 
   render() {
     const header = (
@@ -233,7 +228,7 @@ export default class MainPage extends Component {
             inline
             action="."
             ws={this.state.ws}
-            onSubmit={(e) => {
+            onSubmit={e => {
               e.preventDefault();
               this.submitMessage(this.state.message);
               this.setState({ message: '' });
@@ -245,7 +240,7 @@ export default class MainPage extends Component {
                 type="text"
                 placeholder="enter message"
                 value={this.state.message}
-                onChange={(e) => {
+                onChange={e => {
                   this.setState({ message: e.target.value });
                 }}
               />
