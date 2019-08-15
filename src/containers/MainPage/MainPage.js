@@ -129,17 +129,18 @@ export default class MainPage extends Component {
 
   addMessage(mes) {
     console.log('mes', mes);
-
+    if (mes.length > 1) {
+      this.notificationSend(
+        `You have ${mes.length} new messages`,
+        'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+      );
+    }
     mes
       .slice(0, 199)
       .reverse()
       .forEach((item) => {
         if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
-          if (
-            mes.length === 1
-
-          // && window.onblur
-          ) {
+          if (mes.length === 1) {
             this.notificationSend(
               item.from,
               'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
