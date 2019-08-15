@@ -2,21 +2,22 @@ import React, { Component } from 'react';
 import {
  Button, Col, Input, Form 
 } from 'reactstrap';
+import ReconnectingWebSocket from 'reconnecting-websocket';
+
 // import PropTypes from 'prop-types';
 import Header from '../../components/Header/Header';
 import Message from '../../components/Message/Message';
 import './MainPage.css';
 // import Chat from '../../components/Chat/Chat';
 
-const URL = 'ws://st-chat.shas.tel';
+const URL = 'wss://wssproxy.herokuapp.com/';
 // const ws = new WebSocket(URL);
+// let ws;
 
 export default class MainPage extends Component {
   constructor(props) {
     super(props);
-    // if (localStorage.getItem('state')) {
-    //   this.state = JSON.parse(localStorage.getItem('state'));
-    // } else {
+
     this.state = {
       authorized: localStorage.getItem('state')
         ? JSON.parse(localStorage.getItem('state')).authorized
@@ -26,9 +27,9 @@ export default class MainPage extends Component {
         : '',
       message: '',
       messages: [],
-      // ws: new WebSocket(URL),
+      // ws: null,
     };
-    // this.ws = new WebSocket(URL);
+    this.ws = new ReconnectingWebSocket(URL);
     // }
     this.authorize = this.authorize.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -37,29 +38,37 @@ export default class MainPage extends Component {
   }
 
   componentDidMount() {
-    this.ws = this.state.ws || new WebSocket(URL);
+    // let ws = null;
+
+    // this.ws = this.state.ws || new WebSocket(URL);
     // this.ws = new WebSocket(URL);
 
     this.ws.onopen = () => {
       console.log('____________connected');
+      console.log('open-socket.readyState', this.ws.readyState);
     };
 
     this.ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
       this.addMessage(message);
-      // console.log('message', message);
-
-      // this.state.messages.forEach((item) => {
-      //   // console.log(item.message);
-      // });
+      // console.log('-mes-socket.readyState', this.ws.readyState);
     };
 
     this.ws.onclose = () => {
       console.log('_____________disconnected');
       // automatically try to reconnect on connection loss
+      // ws = new WebSocket(URL);
+      this.ws = new WebSocket(URL);
+      // setTimeout(() => {
       this.setState({
         ws: new WebSocket(URL),
       });
+      // }, 1000);
+      console.log('close-socket.readyState', this.ws.readyState);
+    };
+
+    this.ws.onerror = (error) => {
+      console.log(`Ошибка ${error.message}`);
     };
   }
 
@@ -71,9 +80,11 @@ export default class MainPage extends Component {
 
   addMessage(mes) {
     console.log('mes', mes);
-    mes
-      .reverse()
-      .forEach((item) => this.setState({ messages: [...this.state.messages, item] }),);
+    mes.reverse().forEach((item) => {
+      if (mes.indexOf(item.id) === -1) {
+        this.setState({ messages: [...this.state.messages, item] });
+      }
+    });
   }
 
   // addMessage = mes =>
@@ -144,7 +155,7 @@ export default class MainPage extends Component {
           <div className="input_message">
             {this.state.messages.map((mes, index) => (
               <Message
-                key={index}
+                key={index + mes.id}
                 message={mes.message}
                 name={mes.from}
                 time={mes.time}
@@ -183,7 +194,7 @@ export default class MainPage extends Component {
                   color="primary"
                   className="button"
                   onClick={() => {
-                    this.ws.close();
+                    this.ws.close(1000, 'работа закончена');
                   }}
                 >
                   close Connection
