@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
- Button, Col, Input, Form 
+  Button, Col, Input, Form,
 } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -21,147 +21,108 @@ export default class MainPage extends Component {
       name: '',
       message: '',
       messages: [],
-      // ws: new ReconnectingWebSocket(URL),
     };
-    // this.ws = this.state.ws;
-    // }
     this.authorize = this.authorize.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.addMessage = this.addMessage.bind(this);
     this.submitMessage = this.submitMessage.bind(this);
+    this.connect = this.connect.bind(this);
+  }
+
+  notificationSend(message, ico, name) {
+    this.notification = new Notification(message, {
+      body: name,
+      icon: ico,
+    });
+
+    // setTimeout(() => {
+    //   this.notification.close();
+    // }, 1500);
   }
 
   notifyMe() {
     // Проверка поддержки браузером уведомлений
     if (!('Notification' in window)) {
       alert('This browser does not support desktop notification');
-    }
-
-    // Проверка разрешения на отправку уведомлений
-    else if (Notification.permission === 'granted') {
+    } else if (Notification.permission === 'granted') {
+      // Проверка разрешения на отправку уведомлений
       // Если разрешено, то создаем уведомление
-      this.notification = new Notification('notification permissions granted');
-    }
-
-    // В противном случае, запрашиваем разрешение
-    else if (Notification.permission !== 'denied') {
+      this.notificationSend('notification permissions granted');
+    } else if (Notification.permission !== 'denied') {
+      // В противном случае, запрашиваем разрешение
       Notification.requestPermission((permission) => {
         // Если пользователь разрешил, то создаем уведомление
         if (permission === 'granted') {
-          this.notification = new Notification(
-            'notification permissions have been granted',
-          );
+          this.notificationSend('notification permissions have been granted');
         }
       });
     }
-    // this.notification = new Notification(msg);
   }
-
-  // setTimeout(()=> {
-  componentDidMount() {
-    // this.ws = this.state.ws;
-    // this.notifyMe();
-    setTimeout(() => {
-      console.log(this.state.authorized === true);
-
-      if (this.state.authorized === true) {
-        this.ws = new ReconnectingWebSocket(URL);
-        this.ws.onopen = () => {
-          console.log('____________connected: ', new Date());
-          console.log('open-socket.readyState', this.ws.readyState);
-
-          this.notification = new Notification('connection open', {
-            icon:
-              'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
-          });
-
-          // setTimeout(() => {
-          // this.notification.close();
-          // }, 8000);
-          this.setState({ readyState: this.ws.readyState });
-        };
-
-        this.ws.onmessage = (e) => {
-          const message = JSON.parse(e.data);
-          this.addMessage(message);
-        };
-
-        this.ws.onclose = () => {
-          console.log('_____________disconnected: ', new Date());
-          // automatically try to reconnect on connection loss
-          // this.ws = new WebSocket(URL);
-          // this.setState({
-          //   ws: new WebSocket(URL)
-          // });
-          this.notification = new Notification('connection closed', {
-            icon:
-              'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
-          });
-          // setTimeout(() => {
-          // this.notification.close();
-
-          // }, 8000);
-          console.log('close-socket.readyState', this.ws.readyState);
-          this.setState({ readyState: this.ws.readyState });
-        };
-
-        this.ws.onerror = (error) => {
-          console.log(`Ошибка ${error.message}`);
-          // };
-        };
-      }
-    }, 0);
-  }
-  // }  ,0);
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
-    console.log('before', this.state.authorized);
-
     if (localStorage.getItem('state')) {
-      console.log('auth', JSON.parse(localStorage.getItem('state')).authorized);
-
       setTimeout(() => {
         this.setState({
           authorized: JSON.parse(localStorage.getItem('state')).authorized,
           name: JSON.parse(localStorage.getItem('state')).name,
         });
-        console.log('after', this.state.authorized);
       }, 0);
-      console.log('afterafter', this.state.authorized);
     }
   }
 
-  // componentDidUpdate(prevState) {
-  //   // Популярный пример (не забудьте сравнить пропсы):
-  //   if (this.state.ws !== prevState.ws) {
-  //     this.setState({ ws: new ReconnectingWebSocket(URL) });
-  //   }
-  // }
+  connect() {
+    this.notifyMe();
+    this.ws = new ReconnectingWebSocket(URL);
+    this.ws.onopen = () => {
+      console.log('____________connected: ', new Date());
+      this.notificationSend(
+        'connection open',
+        'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
+      );
+    };
+
+    this.ws.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      this.addMessage(message);
+    };
+
+    this.ws.onclose = () => {
+      console.log('_____________disconnected: ', new Date());
+      this.notificationSend(
+        'connection closed',
+        'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
+      );
+      // console.log('close-socket.readyState', this.ws.readyState);
+      this.setState({ readyState: this.ws.readyState });
+    };
+
+    this.ws.onerror = (error) => {
+      console.log(`Ошибка ${error.message}`);
+      // };
+    };
+  }
+
+  componentDidMount() {
+    setTimeout(() => {
+      if (this.state.authorized === true) {
+        this.connect();
+      }
+    }, 0);
+  }
 
   addMessage(mes) {
-    // console.log('mes', mes);
-
-    // mes.forEach(item => {
-    //   console.log(`${item.from}: ${item.message}`);
-    // });
-
     mes
       .reverse()
-      // .slice(0, 99)
+      .slice(0, 199)
       .forEach((item) => {
         if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
-          // console.log('length', mes.length);
-
           if (mes.length === 1) {
-            this.notification = new Notification(item.from, {
-              body: item.message,
-              icon:
-                'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
-            });
-            setTimeout(() => {
-              this.notification.close();
-            }, 2000);
+            this.notificationSend(
+              item.from,
+              'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+              item.message,
+            );
           }
           this.setState({ messages: [...this.state.messages, item] });
         }
@@ -185,6 +146,12 @@ export default class MainPage extends Component {
       authorized: true,
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
+
+    setTimeout(() => {
+      if (this.state.authorized === true) {
+        this.connect();
+      }
+    }, 0);
   }
 
   handleClick() {
@@ -197,6 +164,7 @@ export default class MainPage extends Component {
       authorized: false,
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
+    this.ws.close();
   }
 
   // handleSubmit(e) {
@@ -264,7 +232,7 @@ export default class MainPage extends Component {
                 <Button color="primary" className="button">
                   Send message
                 </Button>{' '}
-                <Button
+                {/* <Button
                   color="primary"
                   className="button"
                   onClick={() => {
@@ -273,14 +241,10 @@ export default class MainPage extends Component {
                 >
                   close Connection
                 </Button>{' '}
-                {/* <Button
+                <Button
                   color="primary"
                   className="button"
-                  onClick={() => {
-                    this.setState({
-                      ws: new WebSocket(URL),
-                    });
-                  }}
+                  onClick={this.connect}
                 >
                   open Connection
                 </Button>{' '} */}
@@ -295,10 +259,9 @@ export default class MainPage extends Component {
       <div className="wrapper">
         {this.state.authorized ? header : null}
         <div className="main-wrapper">
-          {this.state.authorized
-            ? chat
-            : // <Chat messages={this.state.messages}message={this.state.message} />
-            login}
+          {this.state.authorized ? chat : login
+          // <Chat messages={this.state.messages}message={this.state.message} />
+          }
         </div>
       </div>
     );
