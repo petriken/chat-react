@@ -30,14 +30,18 @@ export default class MainPage extends Component {
   }
 
   notificationSend(message, ico, name) {
-    this.notification = new Notification(message, {
-      body: name,
-      icon: ico,
-    });
+    console.log('document.visibilityState', document.visibilityState);
 
-    // setTimeout(() => {
-    //   this.notification.close();
-    // }, 1500);
+    if ('Notification' in window && document.visibilityState !== 'visible') {
+      this.notification = new Notification(message, {
+        body: name,
+        icon: ico,
+      });
+
+      setTimeout(() => {
+        this.notification.close();
+      }, 1500);
+    }
   }
 
   notifyMe() {
@@ -111,13 +115,31 @@ export default class MainPage extends Component {
     }, 0);
   }
 
+  // Visibility (){window.onfocus = () => {
+  //   document.title = 'Chat';
+  //   store.dispatch(actionUserIsHere(true, 0));
+  // };
+  // window.onblur = () => {
+  //   store.dispatch(actionUserIsHere(false, count));
+  // };
+
+  // if (!user) {
+  //   document.title = ${count} unread messages;
+  // }}
+
   addMessage(mes) {
+    console.log('mes', mes);
+
     mes
-      .reverse()
       .slice(0, 199)
+      .reverse()
       .forEach((item) => {
         if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
-          if (mes.length === 1) {
+          if (
+            mes.length === 1
+
+          // && window.onblur
+          ) {
             this.notificationSend(
               item.from,
               'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
