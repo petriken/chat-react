@@ -17,17 +17,13 @@ export default class MainPage extends Component {
     super(props);
 
     this.state = {
-      authorized: localStorage.getItem('state')
-        ? JSON.parse(localStorage.getItem('state')).authorized
-        : false,
-      name: localStorage.getItem('state')
-        ? JSON.parse(localStorage.getItem('state')).name
-        : '',
+      authorized: false,
+      name: '',
       message: '',
       messages: [],
-      // ws: null,
+      // ws: new ReconnectingWebSocket(URL),
     };
-    this.ws = new ReconnectingWebSocket(URL);
+    // this.ws = this.state.ws;
     // }
     this.authorize = this.authorize.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -35,40 +31,141 @@ export default class MainPage extends Component {
     this.submitMessage = this.submitMessage.bind(this);
   }
 
-  componentDidMount() {
-    this.ws.onopen = () => {
-      console.log('____________connected: ', new Date());
-      console.log('open-socket.readyState', this.ws.readyState);
-    };
+  notifyMe() {
+    // Проверка поддержки браузером уведомлений
+    if (!('Notification' in window)) {
+      alert('This browser does not support desktop notification');
+    }
 
-    this.ws.onmessage = (e) => {
-      const message = JSON.parse(e.data);
-      this.addMessage(message);
-    };
+    // Проверка разрешения на отправку уведомлений
+    else if (Notification.permission === 'granted') {
+      // Если разрешено, то создаем уведомление
+      this.notification = new Notification('notification permissions granted');
+    }
 
-    this.ws.onclose = () => {
-      console.log('_____________disconnected: ', new Date());
-      // automatically try to reconnect on connection loss
-      // this.ws = new WebSocket(URL);
-      // this.setState({
-      //   ws: new WebSocket(URL)
-      // });
-      console.log('close-socket.readyState', this.ws.readyState);
-    };
-
-    this.ws.onerror = (error) => {
-      console.log(`Ошибка ${error.message}`);
-    };
+    // В противном случае, запрашиваем разрешение
+    else if (Notification.permission !== 'denied') {
+      Notification.requestPermission((permission) => {
+        // Если пользователь разрешил, то создаем уведомление
+        if (permission === 'granted') {
+          this.notification = new Notification(
+            'notification permissions have been granted',
+          );
+        }
+      });
+    }
+    // this.notification = new Notification(msg);
   }
 
-  addMessage(mes) {
-    console.log('mes', mes);
+  // setTimeout(()=> {
+  componentDidMount() {
+    // this.ws = this.state.ws;
+    // this.notifyMe();
+    setTimeout(() => {
+      console.log(this.state.authorized === true);
 
-    mes.reverse().forEach((item) => {
-      if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
-        this.setState({ messages: [...this.state.messages, item] });
+      if (this.state.authorized === true) {
+        this.ws = new ReconnectingWebSocket(URL);
+        this.ws.onopen = () => {
+          console.log('____________connected: ', new Date());
+          console.log('open-socket.readyState', this.ws.readyState);
+
+          this.notification = new Notification('connection open', {
+            icon:
+              'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
+          });
+
+          // setTimeout(() => {
+          // this.notification.close();
+          // }, 8000);
+          this.setState({ readyState: this.ws.readyState });
+        };
+
+        this.ws.onmessage = (e) => {
+          const message = JSON.parse(e.data);
+          this.addMessage(message);
+        };
+
+        this.ws.onclose = () => {
+          console.log('_____________disconnected: ', new Date());
+          // automatically try to reconnect on connection loss
+          // this.ws = new WebSocket(URL);
+          // this.setState({
+          //   ws: new WebSocket(URL)
+          // });
+          this.notification = new Notification('connection closed', {
+            icon:
+              'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
+          });
+          // setTimeout(() => {
+          // this.notification.close();
+
+          // }, 8000);
+          console.log('close-socket.readyState', this.ws.readyState);
+          this.setState({ readyState: this.ws.readyState });
+        };
+
+        this.ws.onerror = (error) => {
+          console.log(`Ошибка ${error.message}`);
+          // };
+        };
       }
-    });
+    }, 0);
+  }
+  // }  ,0);
+
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
+    console.log('before', this.state.authorized);
+
+    if (localStorage.getItem('state')) {
+      console.log('auth', JSON.parse(localStorage.getItem('state')).authorized);
+
+      setTimeout(() => {
+        this.setState({
+          authorized: JSON.parse(localStorage.getItem('state')).authorized,
+          name: JSON.parse(localStorage.getItem('state')).name,
+        });
+        console.log('after', this.state.authorized);
+      }, 0);
+      console.log('afterafter', this.state.authorized);
+    }
+  }
+
+  // componentDidUpdate(prevState) {
+  //   // Популярный пример (не забудьте сравнить пропсы):
+  //   if (this.state.ws !== prevState.ws) {
+  //     this.setState({ ws: new ReconnectingWebSocket(URL) });
+  //   }
+  // }
+
+  addMessage(mes) {
+    // console.log('mes', mes);
+
+    // mes.forEach(item => {
+    //   console.log(`${item.from}: ${item.message}`);
+    // });
+
+    mes
+      .reverse()
+      // .slice(0, 99)
+      .forEach((item) => {
+        if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
+          // console.log('length', mes.length);
+
+          if (mes.length === 1) {
+            this.notification = new Notification(item.from, {
+              body: item.message,
+              icon:
+                'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+            });
+            setTimeout(() => {
+              this.notification.close();
+            }, 2000);
+          }
+          this.setState({ messages: [...this.state.messages, item] });
+        }
+      });
   }
 
   submitMessage = (messageString) => {
@@ -86,7 +183,6 @@ export default class MainPage extends Component {
     const tempObj = {
       name: login.slice(0, 30),
       authorized: true,
-      message: this.state.message,
     };
     localStorage.setItem('state', JSON.stringify(tempObj));
   }
@@ -177,7 +273,7 @@ export default class MainPage extends Component {
                 >
                   close Connection
                 </Button>{' '}
-                <Button
+                {/* <Button
                   color="primary"
                   className="button"
                   onClick={() => {
@@ -187,7 +283,7 @@ export default class MainPage extends Component {
                   }}
                 >
                   open Connection
-                </Button>{' '}
+                </Button>{' '} */}
               </div>
             </Col>
           </Form>
