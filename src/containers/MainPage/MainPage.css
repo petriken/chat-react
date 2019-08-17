@@ -82,6 +82,7 @@
 @media (max-width: 576px) {
   .wrapper {
     min-height: 100vh;
+    background-color: #f0f8ff;
   }
   .chat__wrapper {
     margin: 0;
@@ -100,6 +101,10 @@
 
   .button {
     margin-bottom: 10px;
+  }
+
+  .chat__wrapper_text {
+    margin-top: 0;
   }
 }
 
