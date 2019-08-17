@@ -80,6 +80,9 @@
 }
 
 @media (max-width: 576px) {
+  .wrapper {
+    min-height: 100vh;
+  }
   .chat__wrapper {
     margin: 0;
     width: 100%;
@@ -89,6 +92,15 @@
   }
   .chat__wrapper_text {
     min-height: 80%;
+  }
+
+  .button,
+  .input {
+    margin: 5px 0;
+  }
+
+  .button {
+    margin-bottom: 10px;
   }
 }
 

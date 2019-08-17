@@ -37,3 +37,9 @@
   word-break: break-all;
   max-width: 100%;
 }
+
+@media (max-width: 576px) {
+  .message-wrapper {
+    margin: 2px 0;
+  }
+}
