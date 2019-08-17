@@ -94,9 +94,8 @@
     min-height: 80%;
   }
 
-  .button,
-  .input {
-    margin: 5px 0;
+  .button-send {
+    margin: 0 0 10px 0;
   }
 
   .button {

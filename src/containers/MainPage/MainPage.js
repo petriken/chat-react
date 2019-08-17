@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  Button, Col, Input, Form,
+ Button, Col, Input, Form 
 } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -249,7 +249,7 @@ export default class MainPage extends Component {
             </Col>
             <Col md="3" sm="4">
               <div className="form__button-wrapper">
-                <Button color="primary" className="button">
+                <Button color="primary" className="button button-send">
                   Send message
                 </Button>{' '}
                 {/* <Button
