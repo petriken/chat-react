@@ -21,3 +21,12 @@
 .button {
   margin: 10px 0;
 }
+
+@media (max-width: 576px) {
+  .header-wrapper {
+    padding: 0 15px;
+    max-width: 576px;
+    justify-content: space-between;
+    width: 100%;
+  }
+}

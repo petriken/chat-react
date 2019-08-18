@@ -17,11 +17,21 @@
   justify-content: space-between;
   align-items: flex-start;
   color: #ffffff;
-  background-color: #007bff;
   border-radius: 0.25rem;
   max-width: 80%;
 }
 
+.message-primary {
+  background-color: #19eba6;
+  /* #EB195E */
+  /* border: solid 2px #80c5cc; */
+}
+
+.message-secondary {
+  background-color: #eb195e;
+  /* #19eba6 */
+  /* border: solid 2px #cc8780; */
+}
 .message-name,
 .message-text {
   display: inline-block;
@@ -41,5 +51,9 @@
 @media (max-width: 576px) {
   .message-wrapper {
     margin: 2px 0;
+  }
+  .message-name {
+    word-break: break-all;
+    min-width: 25%;
   }
 }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
- Button, Col, Input, Form 
+  Button, Col, Input, Form,
 } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -30,20 +30,95 @@ export default class MainPage extends Component {
     this.connect = this.connect.bind(this);
   }
 
+  // showNotification() {
+  //   console.log(1);
+
+  //   Notification.requestPermission((result) => {
+  //     console.log(2);
+
+  //     if (result === 'granted') {
+  //       console.log(3);
+  //       navigator.serviceWorker.register('../../serviceWorker.js');
+
+  //       navigator.serviceWorker.ready
+
+  //         .then((registration) => {
+  //           console.log(4);
+
+  //           registration.showNotification('Vibration Sample', {
+  //             body: 'Buzz! Buzz!',
+  //             icon: '../images/touch/chrome-touch-icon-192x192.png',
+  //             // vibrate: [200, 100, 200, 100, 200, 100, 200],
+  //             tag: 'vibration-sample',
+  //           });
+  //         })
+  //         .then((registration) => {
+  //           registration.addEventListener('updatefound', () => {
+  //             // If updatefound is fired, it means that there's
+  //             // a new service worker being installed.
+  //             const installingWorker = registration.installing;
+  //             console.log(
+  //               'A new service worker is being installed:',
+  //               installingWorker,
+  //             );
+  //             // You can listen for changes to the installing service worker's
+  //             // state via installingWorker.onstatechange
+  //           });
+  //         })
+  //         .catch((error) => {
+  //           console.log('Service worker registration failed:', error);
+  //         });
+  //     } else {
+  //       console.log('Service workers are not supported.');
+  //     }
+  //   });
+  // }
+
   notificationSend(message, ico, name) {
     if ('Notification' in window && document.visibilityState !== 'visible') {
+      // this.showNotification();
       this.notification = new Notification(message, {
         body: name,
         icon: ico,
       });
 
+      // this.showNotification();
+
       setTimeout(() => {
+        // this.showNotification();
         this.notification.close();
       }, 1500);
     }
   }
 
   notifyMe() {
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker
+    //     .register('../../serviceWorker.js')
+    //     .then((registration) => {
+    //       registration.addEventListener('updatefound', () => {
+    //         // If updatefound is fired, it means that there's
+    //         // a new service worker being installed.
+    //         const installingWorker = registration.installing;
+    //         console.log(
+    //           'A new service worker is being installed:',
+    //           installingWorker,
+    //         );
+    //         // You can listen for changes to the installing service worker's
+    //         // state via installingWorker.onstatechange
+    //       });
+    //     })
+    //     .catch((error) => {
+    //       console.log('Service worker registration failed:', error);
+    //     });
+    // } else {
+    //   console.log('Service workers are not supported.');
+    // }
+
+    // navigator.serviceWorker.register('sw.js');
+
+    // this.showNotification();
+
     // Проверка поддержки браузером уведомлений
     if (!('Notification' in window)) {
       alert('This browser does not support desktop notification');
@@ -74,9 +149,20 @@ export default class MainPage extends Component {
     }
   }
 
+  sendMessage() {
+    if (this.state.offlineMessage) {
+      this.state.offlineMessage.forEach((item) => {
+        this.ws.send(JSON.stringify(item));
+      });
+      this.setState({ offlineMessage: [] });
+    }
+  }
+
   connect() {
+    // ServiceWorkerGlobalScope.onnotificationclick = this.showNotification();
     this.notifyMe();
     this.ws = new ReconnectingWebSocket(URL);
+
     this.ws.onopen = () => {
       console.log('____________connected: ', new Date());
       this.setState({ wsState: this.ws.readyState });
@@ -84,12 +170,7 @@ export default class MainPage extends Component {
         'connection open',
         'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
       );
-      if (this.state.offlineMessage) {
-        this.state.offlineMessage.forEach((item) => {
-          this.ws.send(JSON.stringify(item));
-        });
-        this.setState({ offlineMessage: [] });
-      }
+      this.sendMessage();
     };
 
     this.ws.onmessage = (e) => {
@@ -108,12 +189,16 @@ export default class MainPage extends Component {
     };
 
     this.ws.onerror = (error) => {
-      console.log(`Ошибка ${error.message}`);
-      // };
+      window.console.log('Ошибка', error);
     };
   }
 
   componentDidMount() {
+    window.addEventListener('offline', () => {});
+
+    window.addEventListener('online', () => {
+      this.sendMessage();
+    });
     setTimeout(() => {
       if (this.state.authorized === true) {
         this.connect();
@@ -133,6 +218,7 @@ export default class MainPage extends Component {
       .reverse()
       .forEach((item) => {
         if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
+          const newItem = item;
           if (mes.length === 1) {
             this.notificationSend(
               item.from,
@@ -140,17 +226,22 @@ export default class MainPage extends Component {
               item.message,
             );
           }
-          this.setState({ messages: [...this.state.messages, item] });
+          // if (item.from === this.state.name) {
+          //   newItem.myMessage = true;
+          // } else {
+          //   newItem.myMessage = false;
+          // }
+          this.setState({ messages: [...this.state.messages, newItem] });
         }
       });
   }
 
   submitMessage = (messageString) => {
     let message;
-    if (this.state.wsState === 1) {
+    if (this.state.wsState === 1 && window.navigator.onLine) {
       message = { from: this.state.name, message: messageString };
       this.ws.send(JSON.stringify(message));
-    } else if (this.state.wsState === 3) {
+    } else if (this.state.wsState === 3 || !window.navigator.onLine) {
       message = {
         from: this.state.name,
         message: `offline-msg: ${messageString}`,
@@ -199,7 +290,7 @@ export default class MainPage extends Component {
     );
 
     const login = (
-      <form
+      <Form
         action="#"
         className="login__wrapper_form"
         onSubmit={this.authorize}
@@ -208,7 +299,7 @@ export default class MainPage extends Component {
         <Button color="primary" type="submit" className="button">
           Login
         </Button>{' '}
-      </form>
+      </Form>
     );
 
     const chat = (
@@ -221,6 +312,7 @@ export default class MainPage extends Component {
                 message={mes.message}
                 name={mes.from}
                 time={mes.time}
+                login={this.state.name}
               />
             ))}
           </div>

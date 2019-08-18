@@ -3,7 +3,9 @@ import PropTypes from 'prop-types';
 import './Message.css';
 
 export default function Message(props) {
-  const { name, message, time } = props;
+  const {
+    name, message, time, login,
+  } = props;
   const date = new Date(time);
   const fineTime = `${
     date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
@@ -11,18 +13,33 @@ export default function Message(props) {
     date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds()
   } ${date.toDateString().slice(4, 10)}`;
 
-  return (
+  const ownMessage = (
     <div className="message-wrapper">
-      <div className="message">
+      <div className="message-time">{fineTime}</div>
+      <div className="message message-secondary">
         {' '}
         <div className="message-name">
           <strong>{name.slice(0, 30)}</strong>
         </div>{' '}
         : <div className="message-text">{message}</div>
       </div>
-      <span className="message-time">{fineTime}</span>
     </div>
   );
+
+  const commonMessage = (
+    <div className="message-wrapper">
+      <div className="message message-primary">
+        {' '}
+        <div className="message-name">
+          <strong>{name.slice(0, 30)}</strong>
+        </div>{' '}
+        : <div className="message-text">{message}</div>
+      </div>
+      <div className="message-time">{fineTime}</div>
+    </div>
+  );
+
+  return name === login ? ownMessage : commonMessage;
 }
 
 Message.propTypes = {
