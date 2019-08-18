@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
- Button, Col, Input, Form 
+  Button, Col, Input, Form,
 } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -203,7 +203,7 @@ export default class MainPage extends Component {
       this.addMessage(message);
       const messageWrapper = document.querySelectorAll('.message-wrapper');
       const lastMsg = messageWrapper[messageWrapper.length - 1];
-      lastMsg.scrollIntoView();
+      lastMsg.scrollIntoView({ behavior: 'smooth' });
     };
 
     this.ws.onclose = () => {
