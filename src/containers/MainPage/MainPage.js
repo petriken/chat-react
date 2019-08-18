@@ -164,6 +164,9 @@ export default class MainPage extends Component {
   }
 
   sendMessage() {
+    // const scroolChat = document.querySelector('.input_message');
+    // console.log('scroolChat', scroolChat.scrollTop);
+
     if (this.state.offlineMessage) {
       this.state.offlineMessage.forEach((item) => {
         this.ws.send(JSON.stringify(item));
@@ -198,6 +201,9 @@ export default class MainPage extends Component {
     this.ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
       this.addMessage(message);
+      const messageWrapper = document.querySelectorAll('.message-wrapper');
+      const lastMsg = messageWrapper[messageWrapper.length - 1];
+      lastMsg.scrollIntoView();
     };
 
     this.ws.onclose = () => {
