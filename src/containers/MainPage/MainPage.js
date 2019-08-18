@@ -12,6 +12,7 @@ import store from '../../store/store';
 // import Chat from '../../components/Chat/Chat';
 
 const URL = 'wss://wssproxy.herokuapp.com/';
+let mouseDown = 0;
 
 export default class MainPage extends Component {
   constructor(props) {
@@ -28,7 +29,7 @@ export default class MainPage extends Component {
     this.handleClick = this.handleClick.bind(this);
     this.addMessage = this.addMessage.bind(this);
     this.submitMessage = this.submitMessage.bind(this);
-    this.connect = this.connect.bind(this);
+    this.connection = this.connection.bind(this);
   }
 
   // showNotification() {
@@ -164,9 +165,6 @@ export default class MainPage extends Component {
   }
 
   sendMessage() {
-    // const scroolChat = document.querySelector('.input_message');
-    // console.log('scroolChat', scroolChat.scrollTop);
-
     if (this.state.offlineMessage) {
       this.state.offlineMessage.forEach((item) => {
         this.ws.send(JSON.stringify(item));
@@ -179,7 +177,7 @@ export default class MainPage extends Component {
     }
   }
 
-  connect() {
+  connection() {
     // ServiceWorkerGlobalScope.onnotificationclick = this.showNotification();
     this.notifyMe();
     this.ws = new ReconnectingWebSocket(URL);
@@ -203,7 +201,10 @@ export default class MainPage extends Component {
       this.addMessage(message);
       const messageWrapper = document.querySelectorAll('.message-wrapper');
       const lastMsg = messageWrapper[messageWrapper.length - 1];
-      lastMsg.scrollIntoView({ behavior: 'smooth' });
+
+      if (!mouseDown) {
+        lastMsg.scrollIntoView({ behavior: 'smooth' });
+      }
     };
 
     this.ws.onclose = () => {
@@ -225,14 +226,20 @@ export default class MainPage extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('offline', () => {});
-
+    window.addEventListener('mousedown', () => {
+      // eslint-disable-next-line no-plusplus
+      ++mouseDown;
+    });
+    window.addEventListener('mouseup', () => {
+      // eslint-disable-next-line no-plusplus
+      --mouseDown;
+    });
     window.addEventListener('online', () => {
       this.sendMessage();
     });
     setTimeout(() => {
       if (this.state.authorized === true) {
-        this.connect();
+        this.connection();
       }
     }, 0);
   }
@@ -308,7 +315,7 @@ export default class MainPage extends Component {
 
     setTimeout(() => {
       if (this.state.authorized === true) {
-        this.connect();
+        this.connection();
       }
     }, 0);
   }

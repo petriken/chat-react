@@ -52,11 +52,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
-  flex-direction: column-reverse;
-}
-
-.input_message {
-  min-height: 0;
+  flex-direction: column;
 }
 
 .button,
