@@ -23,20 +23,21 @@
 
 .message-primary {
   background-color: #19eba6;
-  /* #EB195E */
   /* border: solid 2px #80c5cc; */
 }
 
 .message-secondary {
   background-color: #eb195e;
-  /* #19eba6 */
   /* border: solid 2px #cc8780; */
 }
-.message-name,
+.message-from,
 .message-text {
   display: inline-block;
   text-align: left;
   padding: 0 5px;
+}
+.message-text a {
+  color: #ffffff;
 }
 
 .message-name {

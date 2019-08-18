@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  Button, Col, Input, Form,
+ Button, Col, Input, Form 
 } from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -8,6 +8,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import Header from '../../components/Header/Header';
 import Message from '../../components/Message/Message';
 import './MainPage.css';
+import store from '../../store/store';
 // import Chat from '../../components/Chat/Chat';
 
 const URL = 'wss://wssproxy.herokuapp.com/';
@@ -140,12 +141,25 @@ export default class MainPage extends Component {
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
     if (localStorage.getItem('state')) {
-      setTimeout(() => {
-        this.setState({
-          authorized: JSON.parse(localStorage.getItem('state')).authorized,
-          name: JSON.parse(localStorage.getItem('state')).name,
-        });
-      }, 0);
+      store.dispatch({
+        type: 'authorized',
+        payload: JSON.parse(localStorage.getItem('state')).authorized,
+      });
+      store.dispatch({
+        type: 'name',
+        payload: JSON.parse(localStorage.getItem('state')).name,
+      });
+
+      this.setState({
+        authorized: JSON.parse(localStorage.getItem('state')).authorized,
+        name: JSON.parse(localStorage.getItem('state')).name,
+      });
+      // setTimeout(() => {
+      //   this.setState({
+      //     authorized: JSON.parse(localStorage.getItem('state')).authorized,
+      //     name: JSON.parse(localStorage.getItem('state')).name,
+      //   });
+      // }, 0);
     }
   }
 
@@ -153,6 +167,10 @@ export default class MainPage extends Component {
     if (this.state.offlineMessage) {
       this.state.offlineMessage.forEach((item) => {
         this.ws.send(JSON.stringify(item));
+      });
+      store.dispatch({
+        type: 'clearOfflineMessage',
+        payload: [],
       });
       this.setState({ offlineMessage: [] });
     }
@@ -165,6 +183,10 @@ export default class MainPage extends Component {
 
     this.ws.onopen = () => {
       console.log('____________connected: ', new Date());
+      store.dispatch({
+        type: 'wsState',
+        payload: this.ws.readyState,
+      });
       this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection open',
@@ -180,12 +202,15 @@ export default class MainPage extends Component {
 
     this.ws.onclose = () => {
       console.log('_____________disconnected: ', new Date());
+      store.dispatch({
+        type: 'wsState',
+        payload: this.ws.readyState,
+      });
       this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection closed',
         'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
       );
-      this.setState({ readyState: this.ws.readyState });
     };
 
     this.ws.onerror = (error) => {
@@ -226,11 +251,10 @@ export default class MainPage extends Component {
               item.message,
             );
           }
-          // if (item.from === this.state.name) {
-          //   newItem.myMessage = true;
-          // } else {
-          //   newItem.myMessage = false;
-          // }
+          store.dispatch({
+            type: 'messages',
+            payload: newItem,
+          });
           this.setState({ messages: [...this.state.messages, newItem] });
         }
       });
@@ -246,6 +270,10 @@ export default class MainPage extends Component {
         from: this.state.name,
         message: `offline-msg: ${messageString}`,
       };
+      store.dispatch({
+        type: 'offlineMessage',
+        payload: message,
+      });
       this.setState({
         offlineMessage: [...this.state.offlineMessage, message],
       });
@@ -254,6 +282,14 @@ export default class MainPage extends Component {
 
   authorize(e) {
     const login = e.target.querySelector('input[type="login"]').value;
+    store.dispatch({
+      type: 'name',
+      payload: login.slice(0, 30),
+    });
+    store.dispatch({
+      type: 'authorized',
+      payload: true,
+    });
     this.setState({
       name: login.slice(0, 30),
       authorized: true,
@@ -272,6 +308,14 @@ export default class MainPage extends Component {
   }
 
   handleClick() {
+    store.dispatch({
+      type: 'name',
+      payload: '',
+    });
+    store.dispatch({
+      type: 'authorized',
+      payload: false,
+    });
     this.setState({
       name: '',
       authorized: false,
@@ -295,7 +339,12 @@ export default class MainPage extends Component {
         className="login__wrapper_form"
         onSubmit={this.authorize}
       >
-        <Input className="input" type="login" placeholder="login" />
+        <Input
+          className="input"
+          type="login"
+          name="login"
+          placeholder="login"
+        />
         <Button color="primary" type="submit" className="button">
           Login
         </Button>{' '}
@@ -305,17 +354,7 @@ export default class MainPage extends Component {
     const chat = (
       <div className="chat__wrapper">
         <div className="chat__wrapper_text">
-          <div className="input_message">
-            {this.state.messages.map((mes, index) => (
-              <Message
-                key={index + mes.id}
-                message={mes.message}
-                name={mes.from}
-                time={mes.time}
-                login={this.state.name}
-              />
-            ))}
-          </div>
+          <Message />
         </div>
         <div className="form__wrapper">
           <Form
@@ -326,6 +365,10 @@ export default class MainPage extends Component {
               e.preventDefault();
               this.submitMessage(this.state.message);
               this.setState({ message: '' });
+              store.dispatch({
+                type: 'message',
+                payload: '',
+              });
             }}
           >
             <Col className="form__send-message" md="9" sm="8">
@@ -335,6 +378,10 @@ export default class MainPage extends Component {
                 placeholder="enter message"
                 value={this.state.message}
                 onChange={(e) => {
+                  store.dispatch({
+                    type: 'message',
+                    payload: e.target.value,
+                  });
                   this.setState({ message: e.target.value });
                 }}
               />
