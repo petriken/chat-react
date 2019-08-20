@@ -1,0 +1,21 @@
+.login__wrapper_form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: azure;
+  border: solid 2px #007bff;
+  border-radius: 0.5rem;
+  padding: 10px 40px;
+}
+
+.button,
+.input {
+  margin: 10px 0;
+}
+
+@media (max-width: 576px) {
+  .button {
+    margin-bottom: 10px;
+  }
+}

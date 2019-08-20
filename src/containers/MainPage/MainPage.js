@@ -1,31 +1,20 @@
+/* eslint-disable class-methods-use-this */
 import React, { Component } from 'react';
-import {
-  Button, Col, Input, Form,
-} from 'reactstrap';
 import ReconnectingWebSocket from 'reconnecting-websocket';
-
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Header from '../../components/Header/Header';
-import Message from '../../components/Message/Message';
+import Login from '../../components/Login/Login';
+import Chat from '../../components/Chat/Chat';
 import './MainPage.css';
 import store from '../../store/store';
-// import Chat from '../../components/Chat/Chat';
 
 const URL = 'wss://wssproxy.herokuapp.com/';
 let mouseDown = 0;
 
-export default class MainPage extends Component {
+class MainPage extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      authorized: false,
-      name: '',
-      message: '',
-      messages: [],
-      offlineMessage: [],
-    };
-    this.authorize = this.authorize.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.addMessage = this.addMessage.bind(this);
     this.submitMessage = this.submitMessage.bind(this);
@@ -83,8 +72,14 @@ export default class MainPage extends Component {
         body: name,
         icon: ico,
       });
+      this.notification.onclick = (event) => {
+        event.preventDefault(); // prevent the browser from focusing the Notification's tab
+        window.focus();
+        this.notification.close();
 
-      // this.showNotification();
+        // window.open(this.props.currentUrl, '_blank');
+        // this.notification.close();
+      };
 
       setTimeout(() => {
         // this.showNotification();
@@ -118,7 +113,6 @@ export default class MainPage extends Component {
     // }
 
     // navigator.serviceWorker.register('sw.js');
-
     // this.showNotification();
 
     // Проверка поддержки браузером уведомлений
@@ -127,6 +121,7 @@ export default class MainPage extends Component {
     } else if (Notification.permission === 'granted') {
       // Проверка разрешения на отправку уведомлений
       // Если разрешено, то создаем уведомление
+
       this.notificationSend('notification permissions granted');
     } else if (Notification.permission !== 'denied') {
       // В противном случае, запрашиваем разрешение
@@ -150,30 +145,22 @@ export default class MainPage extends Component {
         type: 'name',
         payload: JSON.parse(localStorage.getItem('state')).name,
       });
-
-      this.setState({
-        authorized: JSON.parse(localStorage.getItem('state')).authorized,
-        name: JSON.parse(localStorage.getItem('state')).name,
+      store.dispatch({
+        type: 'currentUrl',
+        payload: document.location.href,
       });
-      // setTimeout(() => {
-      //   this.setState({
-      //     authorized: JSON.parse(localStorage.getItem('state')).authorized,
-      //     name: JSON.parse(localStorage.getItem('state')).name,
-      //   });
-      // }, 0);
     }
   }
 
   sendMessage() {
-    if (this.state.offlineMessage) {
-      this.state.offlineMessage.forEach((item) => {
+    if (this.props.offlineMessage) {
+      this.props.offlineMessage.forEach((item) => {
         this.ws.send(JSON.stringify(item));
       });
       store.dispatch({
         type: 'clearOfflineMessage',
         payload: [],
       });
-      this.setState({ offlineMessage: [] });
     }
   }
 
@@ -188,11 +175,11 @@ export default class MainPage extends Component {
         type: 'wsState',
         payload: this.ws.readyState,
       });
-      this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection open',
         'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
       );
+
       this.sendMessage();
     };
 
@@ -202,7 +189,7 @@ export default class MainPage extends Component {
       const messageWrapper = document.querySelectorAll('.message-wrapper');
       const lastMsg = messageWrapper[messageWrapper.length - 1];
 
-      if (!mouseDown) {
+      if (!mouseDown && lastMsg) {
         lastMsg.scrollIntoView({ behavior: 'smooth' });
       }
     };
@@ -213,7 +200,6 @@ export default class MainPage extends Component {
         type: 'wsState',
         payload: this.ws.readyState,
       });
-      this.setState({ wsState: this.ws.readyState });
       this.notificationSend(
         'connection closed',
         'https://cdn.clipart.email/d73437276d4eb5903c0491b2d16fa0ce_red-x-icon-clip-art-at-clkercom-vector-clip-art-online-royalty-_231-297.png',
@@ -227,18 +213,20 @@ export default class MainPage extends Component {
 
   componentDidMount() {
     window.addEventListener('mousedown', () => {
-      // eslint-disable-next-line no-plusplus
-      ++mouseDown;
+      mouseDown += 1;
+      store.dispatch({
+        type: 'mouseDown',
+        payload: mouseDown,
+      });
     });
     window.addEventListener('mouseup', () => {
-      // eslint-disable-next-line no-plusplus
-      --mouseDown;
+      mouseDown -= 1;
     });
     window.addEventListener('online', () => {
       this.sendMessage();
     });
     setTimeout(() => {
-      if (this.state.authorized === true) {
+      if (this.props.authorized === true) {
         this.connection();
       }
     }, 0);
@@ -255,7 +243,7 @@ export default class MainPage extends Component {
       .slice(0, 199)
       .reverse()
       .forEach((item) => {
-        if (this.state.messages.findIndex((elem) => elem.id === item.id) === -1) {
+        if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
           const newItem = item;
           if (mes.length === 1) {
             this.notificationSend(
@@ -268,57 +256,28 @@ export default class MainPage extends Component {
             type: 'messages',
             payload: newItem,
           });
-          this.setState({ messages: [...this.state.messages, newItem] });
         }
       });
   }
 
   submitMessage = (messageString) => {
     let message;
-    if (this.state.wsState === 1 && window.navigator.onLine) {
-      message = { from: this.state.name, message: messageString };
-      this.ws.send(JSON.stringify(message));
-    } else if (this.state.wsState === 3 || !window.navigator.onLine) {
-      message = {
-        from: this.state.name,
-        message: `offline-msg: ${messageString}`,
-      };
-      store.dispatch({
-        type: 'offlineMessage',
-        payload: message,
-      });
-      this.setState({
-        offlineMessage: [...this.state.offlineMessage, message],
-      });
+    if (messageString) {
+      if (this.props.wsState === 1 && window.navigator.onLine) {
+        message = { from: this.props.name, message: messageString };
+        this.ws.send(JSON.stringify(message));
+      } else if (this.props.wsState !== 1 || !window.navigator.onLine) {
+        message = {
+          from: this.props.name,
+          message: `offline-msg: ${messageString}`,
+        };
+        store.dispatch({
+          type: 'offlineMessage',
+          payload: message,
+        });
+      }
     }
   };
-
-  authorize(e) {
-    const login = e.target.querySelector('input[type="login"]').value;
-    store.dispatch({
-      type: 'name',
-      payload: login.slice(0, 30),
-    });
-    store.dispatch({
-      type: 'authorized',
-      payload: true,
-    });
-    this.setState({
-      name: login.slice(0, 30),
-      authorized: true,
-    });
-    const tempObj = {
-      name: login.slice(0, 30),
-      authorized: true,
-    };
-    localStorage.setItem('state', JSON.stringify(tempObj));
-
-    setTimeout(() => {
-      if (this.state.authorized === true) {
-        this.connection();
-      }
-    }, 0);
-  }
 
   handleClick() {
     store.dispatch({
@@ -329,10 +288,6 @@ export default class MainPage extends Component {
       type: 'authorized',
       payload: false,
     });
-    this.setState({
-      name: '',
-      authorized: false,
-    });
     const tempObj = {
       name: '',
       authorized: false,
@@ -342,97 +297,15 @@ export default class MainPage extends Component {
   }
 
   render() {
-    const header = (
-      <Header onClick={this.handleClick} login={this.state.name} />
-    );
-
-    const login = (
-      <Form
-        action="#"
-        className="login__wrapper_form"
-        onSubmit={this.authorize}
-      >
-        <Input
-          className="input"
-          type="login"
-          name="login"
-          placeholder="login"
-        />
-        <Button color="primary" type="submit" className="button">
-          Login
-        </Button>{' '}
-      </Form>
-    );
-
-    const chat = (
-      <div className="chat__wrapper">
-        <div className="chat__wrapper_text">
-          <Message />
-        </div>
-        <div className="form__wrapper">
-          <Form
-            inline
-            action="."
-            ws={this.state.ws}
-            onSubmit={(e) => {
-              e.preventDefault();
-              this.submitMessage(this.state.message);
-              this.setState({ message: '' });
-              store.dispatch({
-                type: 'message',
-                payload: '',
-              });
-            }}
-          >
-            <Col className="form__send-message" md="9" sm="8">
-              <Input
-                className="input"
-                type="text"
-                placeholder="enter message"
-                value={this.state.message}
-                onChange={(e) => {
-                  store.dispatch({
-                    type: 'message',
-                    payload: e.target.value,
-                  });
-                  this.setState({ message: e.target.value });
-                }}
-              />
-            </Col>
-            <Col md="3" sm="4">
-              <div className="form__button-wrapper">
-                <Button color="primary" className="button button-send">
-                  Send message
-                </Button>{' '}
-                {/* <Button
-                  color="primary"
-                  className="button"
-                  onClick={() => {
-                    this.ws.close(1000, 'работа закончена');
-                  }}
-                >
-                  close Connection
-                </Button>{' '}
-                <Button
-                  color="primary"
-                  className="button"
-                  onClick={this.connect}
-                >
-                  open Connection
-                </Button>{' '} */}
-              </div>
-            </Col>
-          </Form>
-        </div>
-      </div>
-    );
-
     return (
       <div className="wrapper">
-        {this.state.authorized ? header : null}
+        {this.props.authorized ? <Header onClick={this.handleClick} /> : null}
         <div className="main-wrapper">
-          {this.state.authorized ? chat : login
-          // <Chat messages={this.state.messages}message={this.state.message} />
+          {this.props.authorized ? (
+            <Chat submitMessage={this.submitMessage} />
+          ) : (
+            <Login onConnection={this.connection} />
+          )
           }
         </div>
       </div>
@@ -440,8 +313,23 @@ export default class MainPage extends Component {
   }
 }
 
-// MainPage.propTypes = {
-//   name: PropTypes.string.isRequired,
-// };
-// const mapStateToProps = state => ({ lang: state.locales.lang });
-// export default connect(mapStateToProps)(MainPage);
+MainPage.propTypes = {
+  authorized: PropTypes.bool.isRequired,
+  name: PropTypes.string.isRequired,
+  offlineMessage: PropTypes.array.isRequired,
+  messages: PropTypes.array.isRequired,
+  wsState: PropTypes.number,
+  message: PropTypes.string.isRequired,
+  currentUrl: PropTypes.string.isRequired,
+};
+const mapStateToProps = (state) => ({
+  authorized: state.authorized,
+  name: state.name,
+  offlineMessage: state.offlineMessage,
+  messages: state.messages,
+  wsState: state.wsState,
+  message: state.message,
+  currentUrl: state.currentUrl,
+});
+
+export default connect(mapStateToProps)(MainPage);

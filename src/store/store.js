@@ -1,23 +1,14 @@
 import { createStore } from 'redux';
-// import { restElement } from '@babel/types';
-// import messages from '../translations';
 
 const initialState = {
-  // term: '',
-  // city: '',
-  // locales: {
-  //   lang: 'ru',
-  //   messages: messages.ru,
-  // },
-  // page: localStorage.getItem('page') || '/ru',
-
   authorized: false,
   name: '',
+  currentUrl: '',
   offlineMessage: [],
+  mouseDown: null,
   message: '',
   messages: [],
   wsState: null,
-  // ws: null,
 };
 
 function appState(state = initialState, action) {
@@ -26,6 +17,8 @@ function appState(state = initialState, action) {
       return { ...state, authorized: action.payload };
     case 'name':
       return { ...state, name: action.payload };
+    case 'currentUrl':
+      return { ...state, currentUrl: action.payload };
     case 'offlineMessage':
       return {
         ...state,
@@ -38,6 +31,8 @@ function appState(state = initialState, action) {
       };
     case 'wsState':
       return { ...state, wsState: action.payload };
+    case 'mouseDown':
+      return { ...state, mouseDown: action.payload };
     case 'message':
       return { ...state, message: action.payload };
     case 'messages':
@@ -48,9 +43,6 @@ function appState(state = initialState, action) {
     default:
       return state;
   }
-  // console.log('action', action);
-
-  // return state;
 }
 
 const store = createStore(appState);
@@ -59,11 +51,6 @@ console.log('initialState', store.getState());
 
 // store.subscribe(() => {
 //   console.log('subscribe', store.getState());
-// });
-
-// store.dispatch({
-//   type: 'authorized',
-//   payload: true,
 // });
 
 export default store;

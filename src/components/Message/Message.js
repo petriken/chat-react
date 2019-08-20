@@ -85,11 +85,8 @@ function Message(props) {
 }
 
 Message.propTypes = {
-  // from: PropTypes.string.isRequired,
   login: PropTypes.string.isRequired,
-  // message: PropTypes.string.isRequired,
   messages: PropTypes.array.isRequired,
-  // time: PropTypes.number.isRequired
 };
 
 const mapStateToProps = (state) => ({
