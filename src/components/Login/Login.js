@@ -13,22 +13,25 @@ class Login extends Component {
 
   authorize(e) {
     const login = e.target.querySelector('input[type="login"]').value;
+    if (login) {
+      store.dispatch({
+        type: 'authorized',
+        payload: true,
+      });
+      store.dispatch({
+        type: 'name',
+        payload: login.slice(0, 30),
+      });
 
-    store.dispatch({
-      type: 'authorized',
-      payload: true,
-    });
-    store.dispatch({
-      type: 'name',
-      payload: login.slice(0, 30),
-    });
-
-    const tempObj = {
-      name: login.slice(0, 30),
-      authorized: true,
-    };
-    localStorage.setItem('state', JSON.stringify(tempObj));
-    this.props.onConnection();
+      const tempObj = {
+        name: login.slice(0, 30),
+        authorized: true,
+      };
+      localStorage.setItem('state', JSON.stringify(tempObj));
+      this.props.onConnection();
+    } else {
+      global.alert('Please register');
+    }
   }
 
   render() {
@@ -42,6 +45,7 @@ class Login extends Component {
           className="input"
           type="login"
           name="login"
+          autoComplete="on"
           placeholder="login"
         />
         <Button color="primary" type="submit" className="button">

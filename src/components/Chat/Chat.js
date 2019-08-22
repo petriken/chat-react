@@ -6,6 +6,7 @@ import {
 } from 'reactstrap';
 import { connect } from 'react-redux';
 import Message from '../Message/Message';
+import globe from '../../assets/9.gif';
 import store from '../../store/store';
 
 function handleSubmit(props, e) {
@@ -17,36 +18,46 @@ function handleSubmit(props, e) {
   });
 }
 
+function handleChange(e) {
+  store.dispatch({
+    type: 'message',
+    payload: e.target.value,
+  });
+}
+
 function Chat(props) {
   return (
   <div className="chat__wrapper">
   <div className="chat__wrapper_text">
-    <Message />
+      <Message />
+      <div className="chat__wrapper_loading chat__wrapper_loading-disconnect" id="chat__wrapper_loading">Connection to server {'  '}<img alt="downloading-gif" width="30" height="30" src={ globe }/>  </div>
   </div>
   <div className="form__wrapper">
     <Form
-      inline
+      // inline
       action="#"
       onSubmit={(e) => handleSubmit(props, e)}
+      className="form__send-message"
     >
-      <Col className="form__send-message" md="9" sm="8">
+      <Col className="form-input__send-message"
+       md="10" sm="10"
+       >
         <Input
           className="input"
           type="text"
           placeholder="enter message"
           value={props.message}
           onChange={(e) => {
-            store.dispatch({
-              type: 'message',
-              payload: e.target.value,
-            });
+            handleChange(e);
           }}
         />
       </Col>
-      <Col md="3" sm="4">
+      <Col
+      // md="2" sm="2"
+      >
         <div className="form__button-wrapper">
           <Button color="primary" className="button button-send">
-            Send message
+            Send
           </Button>{' '}
         </div>
       </Col>

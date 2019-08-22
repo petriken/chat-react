@@ -53,8 +53,13 @@
   .message-wrapper {
     margin: 2px 0;
   }
-  .message-name {
+  .message-from {
     word-break: break-all;
+    min-width: 25%;
+  }
+
+  .message-text {
+    /* word-break: break-all; */
     min-width: 25%;
   }
 }
