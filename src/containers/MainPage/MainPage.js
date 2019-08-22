@@ -89,9 +89,11 @@ class MainPage extends Component {
   //   });
   // }
 
-
   notificationSend(message, ico, name) {
-    Notification.requestPermission((result) => {
+    // Проверка поддержки браузером уведомлений
+    if (!('Notification' in window)) {
+      alert('This browser does not support desktop notification');
+    } else if (Notification.requestPermission((result) => {
       if (result === 'granted' && document.visibilityState !== 'visible') {
         navigator.serviceWorker.ready.then((registration) => {
           // eslint-disable-next-line no-param-reassign
@@ -99,17 +101,8 @@ class MainPage extends Component {
             body: name,
             icon: ico,
           });
-          // window.self.onnotificationclick = (event) => {
-          //   event.preventDefault();
-          //   console.log('On notification click: ', event.notification.tag);
-          //   event.notification.close();
-          // };
-          // console.log('onnotif');
         })
-        // .then((notificationEvent) => {
-        //   const { notification } = notificationEvent;
-        //   setTimeout(() => notification.close(), 60000);
-        // })
+
           .catch((err) => console.log(err));
         window.self.onnotificationclick = (event) => {
           event.preventDefault();
@@ -117,8 +110,9 @@ class MainPage extends Component {
           event.notification.close();
         };
       }
-    });
+    }));
   }
+
 
   // notificationSend(message, ico, name) {
   //   // Notification.requestPermission((result) => {
