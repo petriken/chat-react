@@ -5,7 +5,8 @@ const initialState = {
   name: '',
   currentUrl: '',
   offlineMessage: [],
-  mouseDown: null,
+  mouseDown: 0,
+  touchstart: 0,
   message: '',
   messages: [],
   wsState: null,
@@ -33,6 +34,8 @@ function appState(state = initialState, action) {
       return { ...state, wsState: action.payload };
     case 'mouseDown':
       return { ...state, mouseDown: action.payload };
+    case 'touchstart':
+      return { ...state, touchstart: action.payload };
     case 'message':
       return { ...state, message: action.payload };
     case 'messages':
@@ -46,11 +49,5 @@ function appState(state = initialState, action) {
 }
 
 const store = createStore(appState);
-
-console.log('initialState', store.getState());
-
-// store.subscribe(() => {
-//   console.log('subscribe', store.getState());
-// });
 
 export default store;

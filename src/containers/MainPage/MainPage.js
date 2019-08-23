@@ -11,13 +11,6 @@ import store from '../../store/store';
 import * as serviceWorker from '../../serviceWorker';
 
 const URL = 'wss://wssproxy.herokuapp.com/';
-let mouseDown = 0;
-serviceWorker.register();
-
-// window.self.addEventListener('notificationclick', (event) => {
-//   console.log('On notification click: ', event.notification.tag);
-//   event.notification.close();
-// });
 
 class MainPage extends Component {
   constructor(props) {
@@ -31,181 +24,76 @@ class MainPage extends Component {
   checkConnection() {
     const disconnectMessage = document.getElementById('chat__wrapper_loading');
     if (disconnectMessage) {
-      console.log(this.props.wsState, window.navigator.onLine);
-
       if (this.props.wsState !== 1 || !window.navigator.onLine) {
-        console.log('dis');
-
         disconnectMessage.classList.remove('chat__wrapper_loading-connect');
         disconnectMessage.classList.add('chat__wrapper_loading-disconnect');
         disconnectMessage.scrollIntoView({ behavior: 'smooth' });
       } else if (this.props.wsState === 1 && window.navigator.onLine) {
-        console.log('con');
-
         disconnectMessage.classList.add('chat__wrapper_loading-connect');
         disconnectMessage.classList.remove('chat__wrapper_loading-disconnect');
       }
     }
   }
 
-
-  // showNotification() {
-
-  //   Notification.requestPermission((result) => {
-
-  //     if (result === 'granted') {
-  //       navigator.serviceWorker.register('../../serviceWorker.js');
-
-  //       navigator.serviceWorker.ready
-
-  //         .then((registration) => {
-
-  //           registration.showNotification('Vibration Sample', {
-  //             body: 'Buzz! Buzz!',
-  //             icon: '../images/touch/chrome-touch-icon-192x192.png',
-  //             // vibrate: [200, 100, 200, 100, 200, 100, 200],
-  //             tag: 'vibration-sample',
-  //           });
-  //         })
-  // .then((registration) => {
-  //   registration.addEventListener('updatefound', () => {
-  //     // If updatefound is fired, it means that there's
-  //     // a new service worker being installed.
-  //     const installingWorker = registration.installing;
-  //     console.log(
-  //       'A new service worker is being installed:',
-  //       installingWorker,
-  //     );
-  //     // You can listen for changes to the installing service worker's
-  //     // state via installingWorker.onstatechange
-  //   });
-  // })
-  //         .catch((error) => {
-  //           console.log('Service worker registration failed:', error);
-  //         });
-  //     } else {
-  //       console.log('Service workers are not supported.');
-  //     }
-  //   });
-  // }
-
   notificationSend(message, ico, name) {
+    // Проверка поддержки браузером уведомлений
+    if ('Notification' in window && document.visibilityState !== 'visible') {
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        Notification.requestPermission((result) => {
+          if (result === 'granted') {
+            navigator.serviceWorker.ready.then((registration) => {
+              // eslint-disable-next-line no-param-reassign
+              registration.showNotification(message, {
+                body: name,
+                icon: ico,
+                tag: 'sample',
+              });
+              // eslint-disable-next-line no-restricted-globals
+              self.addEventListener('notificationclick', (event) => {
+                console.log('On notification click: ', event.notification.tag);
+                event.notification.close();
+              });
+            }).catch((err) => console.log(err));
+          }
+        });
+      } else {
+        this.notification = new Notification(message, {
+          body: name,
+          icon: ico,
+        });
+        this.notification.onclick = (event) => {
+          event.preventDefault(); // prevent the browser from focusing the Notification's tab
+          window.focus();
+          this.notification.close();
+        };
+        setTimeout(() => {
+          this.notification.close();
+        }, 1500);
+      }
+    }
+  }
+
+  notifyMe() {
+    serviceWorker.register();
+
     // Проверка поддержки браузером уведомлений
     if (!('Notification' in window)) {
       alert('This browser does not support desktop notification');
-    } else if (Notification.requestPermission((result) => {
-      if (result === 'granted' && document.visibilityState !== 'visible') {
-        navigator.serviceWorker.ready.then((registration) => {
+    } else if (Notification.permission === 'granted') {
+      // Проверка разрешения на отправку уведомлений
+      // Если разрешено, то создаем уведомление
+
+      // this.notificationSend('notification permissions granted');
+    } else if (Notification.permission !== 'denied') {
+      // В противном случае, запрашиваем разрешение
+      Notification.requestPermission((permission) => {
+        // Если пользователь разрешил, то создаем уведомление
+        if (permission === 'granted') {
+          navigator.serviceWorker.ready.then((registration) => {
           // eslint-disable-next-line no-param-reassign
-          registration.showNotification(message, {
-            body: name,
-            icon: ico,
-          });
-        })
-
-          .catch((err) => console.log(err));
-        window.self.onnotificationclick = (event) => {
-          event.preventDefault();
-          console.log('On notification click: ', event.notification.tag);
-          event.notification.close();
-        };
-      }
-    }));
-  }
-
-
-  // notificationSend(message, ico, name) {
-  //   // Notification.requestPermission((result) => {
-  //   //   if (result === 'granted') {
-  //   //     navigator.serviceWorker.ready.then((registration) => {
-  //   //       registration.showNotification('Notification with ServiceWorker');
-  //   //     });
-  //   //   }
-  //   // });
-  //   if ('Notification' in window && document.visibilityState !== 'visible') {
-  //     // this.showNotification();
-  //     this.notification = new Notification(message, {
-  //       body: name,
-  //       icon: ico,
-  // });
-  // this.notification.onclick = (event) => {
-  // event.preventDefault(); // prevent the browser from focusing the Notification's tab
-  // window.focus();
-  // this.notification.close();
-
-  //       // window.open(this.props.currentUrl, '_blank');
-  //       // this.notification.close();
-  //     };
-
-  //     setTimeout(() => {
-  //       // this.showNotification();
-  //       this.notification.close();
-  //     }, 1500);
-  //   }
-  // }
-
-  // notifyMe() {
-  //   // if ('serviceWorker' in navigator) {
-  //   //   navigator.serviceWorker
-  //   //     .register('../../serviceWorker.js')
-  //   //     .then((registration) => {
-  //   //       registration.addEventListener('updatefound', () => {
-  //   //         // If updatefound is fired, it means that there's
-  //   //         // a new service worker being installed.
-  //   //         const installingWorker = registration.installing;
-  //   //         console.log(
-  //   //           'A new service worker is being installed:',
-  //   //           installingWorker,
-  //   //         );
-  //   //         // You can listen for changes to the installing service worker's
-  //   //         // state via installingWorker.onstatechange
-  //   //       });
-  //   //     })
-  //   //     .catch((error) => {
-  //   //       console.log('Service worker registration failed:', error);
-  //   //     });
-  //   // } else {
-  //   //   console.log('Service workers are not supported.');
-  //   // }
-
-  //   // navigator.serviceWorker.register('sw.js');
-  //   // this.showNotification();
-
-  //   // Проверка поддержки браузером уведомлений
-  //   if (!('Notification' in window)) {
-  //     alert('This browser does not support desktop notification');
-  //   } else if (Notification.permission === 'granted') {
-  //     // Проверка разрешения на отправку уведомлений
-  //     // Если разрешено, то создаем уведомление
-
-  //     this.notificationSend('notification permissions granted');
-  //   } else if (Notification.permission !== 'denied') {
-  //     // В противном случае, запрашиваем разрешение
-  //     Notification.requestPermission((permission) => {
-  //       // Если пользователь разрешил, то создаем уведомление
-  //       if (permission === 'granted') {
-  //         this.notificationSend('notification permissions have been granted');
-  //       }
-  //     });
-  //   }
-  // }
-
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
-    // this.checkConnection();
-    if (localStorage.getItem('state')) {
-      store.dispatch({
-        type: 'authorized',
-        payload: JSON.parse(localStorage.getItem('state')).authorized,
-      });
-      store.dispatch({
-        type: 'name',
-        payload: JSON.parse(localStorage.getItem('state')).name,
-      });
-      store.dispatch({
-        type: 'currentUrl',
-        payload: document.location.href,
+            registration.showNotification('notification permissions have been granted');
+          }).catch((err) => console.log(err));
+        }
       });
     }
   }
@@ -223,13 +111,9 @@ class MainPage extends Component {
   }
 
   connection() {
-    // ServiceWorkerGlobalScope.onnotificationclick = this.showNotification();
-    // this.notifyMe();
     this.ws = new ReconnectingWebSocket(URL);
 
     this.ws.onopen = () => {
-      // const disconnectMessage = document.getElementById('chat__wrapper_loading');
-
       console.log('____________connected: ', new Date(), this.ws.readyState);
       store.dispatch({
         type: 'wsState',
@@ -239,10 +123,6 @@ class MainPage extends Component {
         'connection open',
         'https://www.mgtow.com/wp-content/uploads/ultimatemember/32309/profile_photo-256.png?1558599200',
       );
-      // if (disconnectMessage) {
-      //   disconnectMessage.classList.add('chat__wrapper_loading-connect');
-      //   disconnectMessage.classList.remove('chat__wrapper_loading-disconnect');
-      // }
       this.checkConnection();
       this.sendMessage();
     };
@@ -254,7 +134,7 @@ class MainPage extends Component {
       const lastMsg = messageWrapper[messageWrapper.length - 1];
       const disconnectMessage = document.getElementById('chat__wrapper_loading');
 
-      if (!mouseDown && (lastMsg || disconnectMessage)) {
+      if (!this.props.mouseDown && !this.props.touchstart && (lastMsg || disconnectMessage)) {
         lastMsg.scrollIntoView({ behavior: 'smooth' });
       }
     };
@@ -277,8 +157,36 @@ class MainPage extends Component {
     };
   }
 
+  calcVH() {
+    const vH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    if (document.getElementById('wrapper')) { document.getElementById('wrapper').setAttribute('style', `height:${vH}px;`); }
+  }
+
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
+    if (localStorage.getItem('state')) {
+      store.dispatch({
+        type: 'authorized',
+        payload: JSON.parse(localStorage.getItem('state')).authorized,
+      });
+      store.dispatch({
+        type: 'name',
+        payload: JSON.parse(localStorage.getItem('state')).name,
+      });
+      store.dispatch({
+        type: 'currentUrl',
+        payload: document.location.href,
+      });
+    }
+  }
+
   componentDidMount() {
-    // this.checkConnection();
+    let { mouseDown, touchstart } = this.props;
+    this.notifyMe();
+
+    this.calcVH();
+
+    window.addEventListener('resize', this.calcVH, true);
 
     window.addEventListener('mousedown', () => {
       mouseDown += 1;
@@ -287,21 +195,41 @@ class MainPage extends Component {
         payload: mouseDown,
       });
     });
+
+    window.addEventListener('touchstart', () => {
+      touchstart += 1;
+      store.dispatch({
+        type: 'touchstart',
+        payload: touchstart,
+      });
+    });
+
     window.addEventListener('mouseup', () => {
       mouseDown -= 1;
+      store.dispatch({
+        type: 'mouseDown',
+        payload: mouseDown,
+      });
     });
+
+    window.addEventListener('touchend', () => {
+      touchstart -= 1;
+      store.dispatch({
+        type: 'touchstart',
+        payload: touchstart,
+      });
+    });
+
     window.addEventListener('offline', () => {
-      console.log('offline');
       this.checkConnection();
     });
+
     window.addEventListener('online', () => {
-      console.log('online');
       this.sendMessage();
       this.connection();
     });
-    setTimeout(() => {
-      console.log('this.props.authorized ', this.props.authorized);
 
+    setTimeout(() => {
       if (this.props.authorized === true) {
         this.connection();
       }
@@ -309,13 +237,12 @@ class MainPage extends Component {
   }
 
   componentDidUpdate() {
+    this.calcVH();
     this.checkConnection();
   }
 
-
   addMessage(mes) {
     if (mes.length > 1) {
-      // this.showNotification();
       this.notificationSend(
         `You have ${mes.length} new messages`,
         'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
@@ -328,7 +255,6 @@ class MainPage extends Component {
         if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
           const newItem = item;
           if (mes.length === 1) {
-            // this.showNotification();
             this.notificationSend(
               item.from,
               'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
@@ -339,9 +265,34 @@ class MainPage extends Component {
             type: 'messages',
             payload: newItem,
           });
+          console.log('messages');
         }
       });
   }
+
+  addRestMessage(mes) {
+    mes
+      .slice(200)
+      .reverse()
+      .forEach((item) => {
+        if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
+          const newItem = item;
+          if (mes.length === 1) {
+            this.notificationSend(
+              item.from,
+              'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+              item.message,
+            );
+          }
+          store.dispatch({
+            type: 'messages',
+            payload: newItem,
+          });
+          console.log('messages2');
+        }
+      });
+  }
+
 
   submitMessage = (messageString) => {
     let message;
@@ -381,7 +332,7 @@ class MainPage extends Component {
 
   render() {
     return (
-      <div className="wrapper">
+      <div className="wrapper" id="wrapper" style={{ width: '500px' }} >
         {this.props.authorized ? <Header onClick={this.handleClick} /> : null}
         <div className="main-wrapper">
           {this.props.authorized ? (
@@ -404,6 +355,8 @@ MainPage.propTypes = {
   wsState: PropTypes.number,
   message: PropTypes.string.isRequired,
   currentUrl: PropTypes.string.isRequired,
+  mouseDown: PropTypes.number.isRequired,
+  touchstart: PropTypes.number.isRequired,
 };
 const mapStateToProps = (state) => ({
   authorized: state.authorized,
@@ -413,6 +366,8 @@ const mapStateToProps = (state) => ({
   wsState: state.wsState,
   message: state.message,
   currentUrl: state.currentUrl,
+  mouseDown: state.mouseDown,
+  touchstart: state.touchstart,
 });
 
 export default connect(mapStateToProps)(MainPage);
