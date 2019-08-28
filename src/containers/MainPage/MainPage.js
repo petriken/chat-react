@@ -36,7 +36,6 @@ class MainPage extends Component {
   }
 
   notificationSend(message, ico, name) {
-    // Проверка поддержки браузером уведомлений
     if ('Notification' in window && document.visibilityState !== 'visible') {
       if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         Notification.requestPermission((result) => {
@@ -48,12 +47,7 @@ class MainPage extends Component {
                 icon: ico,
                 tag: 'sample',
               });
-              // eslint-disable-next-line no-restricted-globals
-              self.addEventListener('notificationclick', (event) => {
-                console.log('On notification click: ', event.notification.tag);
-                event.notification.close();
-              });
-            }).catch((err) => console.log(err));
+            }).catch((err) => global.console.log(err));
           }
         });
       } else {
@@ -62,7 +56,7 @@ class MainPage extends Component {
           icon: ico,
         });
         this.notification.onclick = (event) => {
-          event.preventDefault(); // prevent the browser from focusing the Notification's tab
+          event.preventDefault();
           window.focus();
           this.notification.close();
         };
@@ -78,11 +72,10 @@ class MainPage extends Component {
 
     // Проверка поддержки браузером уведомлений
     if (!('Notification' in window)) {
-      alert('This browser does not support desktop notification');
+      global.alert('This browser does not support desktop notification');
     } else if (Notification.permission === 'granted') {
       // Проверка разрешения на отправку уведомлений
       // Если разрешено, то создаем уведомление
-
       // this.notificationSend('notification permissions granted');
     } else if (Notification.permission !== 'denied') {
       // В противном случае, запрашиваем разрешение
@@ -92,7 +85,7 @@ class MainPage extends Component {
           navigator.serviceWorker.ready.then((registration) => {
           // eslint-disable-next-line no-param-reassign
             registration.showNotification('notification permissions have been granted');
-          }).catch((err) => console.log(err));
+          }).catch((err) => global.console.log(err));
         }
       });
     }
@@ -114,7 +107,6 @@ class MainPage extends Component {
     this.ws = new ReconnectingWebSocket(URL);
 
     this.ws.onopen = () => {
-      console.log('____________connected: ', new Date(), this.ws.readyState);
       store.dispatch({
         type: 'wsState',
         payload: this.ws.readyState,
@@ -130,17 +122,9 @@ class MainPage extends Component {
     this.ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
       this.addMessage(message);
-      const messageWrapper = document.querySelectorAll('.message-wrapper');
-      const lastMsg = messageWrapper[messageWrapper.length - 1];
-      const disconnectMessage = document.getElementById('chat__wrapper_loading');
-
-      if (!this.props.mouseDown && !this.props.touchstart && (lastMsg || disconnectMessage)) {
-        lastMsg.scrollIntoView({ behavior: 'smooth' });
-      }
     };
 
     this.ws.onclose = () => {
-      console.log('_____________disconnected: ', new Date(), this.ws.readyState);
       store.dispatch({
         type: 'wsState',
         payload: this.ws.readyState,
@@ -183,7 +167,6 @@ class MainPage extends Component {
   componentDidMount() {
     let { mouseDown, touchstart } = this.props;
     this.notifyMe();
-
     this.calcVH();
 
     window.addEventListener('resize', this.calcVH, true);
@@ -242,6 +225,8 @@ class MainPage extends Component {
   }
 
   addMessage(mes) {
+    const messageWrapper = document.querySelector('.input_message');
+
     if (mes.length > 1) {
       this.notificationSend(
         `You have ${mes.length} new messages`,
@@ -249,50 +234,33 @@ class MainPage extends Component {
       );
     }
     mes
-      .slice(0, 199)
+      .slice(0, 150)
       .reverse()
       .forEach((item) => {
-        if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
-          const newItem = item;
-          if (mes.length === 1) {
-            this.notificationSend(
-              item.from,
-              'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
-              item.message,
-            );
+        setTimeout(() => {
+          if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
+            const newItem = item;
+            if (mes.length === 1) {
+              this.notificationSend(
+                item.from,
+                'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
+                item.message,
+              );
+            }
+            store.dispatch({
+              type: 'messages',
+              payload: newItem,
+            });
+            const lastMsg = messageWrapper.lastChild;
+            const disconnectMessage = document.getElementById('chat__wrapper_loading');
+
+            if (!this.props.mouseDown && !this.props.touchstart && (lastMsg || disconnectMessage)) {
+              lastMsg.scrollIntoView();
+            }
           }
-          store.dispatch({
-            type: 'messages',
-            payload: newItem,
-          });
-          console.log('messages');
-        }
+        }, 0);
       });
   }
-
-  addRestMessage(mes) {
-    mes
-      .slice(200)
-      .reverse()
-      .forEach((item) => {
-        if (this.props.messages.findIndex((elem) => elem.id === item.id) === -1) {
-          const newItem = item;
-          if (mes.length === 1) {
-            this.notificationSend(
-              item.from,
-              'https://miro.medium.com/max/256/1*gGh9I9ju9w4lXhmWoG2fXA.png',
-              item.message,
-            );
-          }
-          store.dispatch({
-            type: 'messages',
-            payload: newItem,
-          });
-          console.log('messages2');
-        }
-      });
-  }
-
 
   submitMessage = (messageString) => {
     let message;

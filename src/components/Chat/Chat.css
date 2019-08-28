@@ -28,6 +28,8 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  -webkit-flex-direction: column-reverse;
+  -moz-flex-direction: column;
 }
 
 .chat__wrapper_loading {

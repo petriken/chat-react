@@ -34,7 +34,6 @@ function Chat(props) {
   </div>
   <div className="form__wrapper">
     <Form
-      // inline
       action="#"
       onSubmit={(e) => handleSubmit(props, e)}
       className="form__send-message"
@@ -53,7 +52,6 @@ function Chat(props) {
         />
       </Col>
       <Col
-      // md="2" sm="2"
       >
         <div className="form__button-wrapper">
           <Button color="primary" className="button button-send">
